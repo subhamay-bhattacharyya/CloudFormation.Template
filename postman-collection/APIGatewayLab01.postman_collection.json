@@ -1,0 +1,93 @@
+{
+	"info": {
+		"_postman_id": "dd4fe792-52c1-488d-ada9-0e16ed840815",
+		"name": "APIGatewayLab01",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "15656166"
+	},
+	"item": [
+		{
+			"name": "GetEndpoint-QueryStringParam",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://eut2bpnv31.execute-api.us-east-1.amazonaws.com/v1/hello?greeter=Subhamay",
+					"protocol": "https",
+					"host": [
+						"eut2bpnv31",
+						"execute-api",
+						"us-east-1",
+						"amazonaws",
+						"com"
+					],
+					"path": [
+						"v1",
+						"hello"
+					],
+					"query": [
+						{
+							"key": "greeter",
+							"value": "Subhamay"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetEndpoint-HeadersParam",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "greeter",
+						"value": "Bhattacharyya",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{API_HOST}}",
+					"host": [
+						"{{API_HOST}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetEndpoint-BodyParams",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "greeter",
+						"value": "Bhattacharyya",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"greeter\": \"Bhattacharyya,Subhamay\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{API_HOST}}/v1/hello",
+					"host": [
+						"{{API_HOST}}"
+					],
+					"path": [
+						"v1",
+						"hello"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

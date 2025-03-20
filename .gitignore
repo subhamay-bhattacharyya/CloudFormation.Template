@@ -1,0 +1,9 @@
+# MacOs temp files
+.DS_Store
+lambda-code/src/myenv
+lambda-code/src/package
+lambda-code/src/lambda-function.zip
+# Python temp files
+*.pyc
+__pycache__
+# Lambda build files

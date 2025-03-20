@@ -1,0 +1,500 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: "API Gateway Lab-01: Root stack template to create
+  Lambda Functions, CloudWatch Log Group, IAM Role and API Gateway Rest API with Lambda proxy integration."
+
+Metadata:
+  TemplateName: root-stack.yaml
+  TemplateType: Root Stack
+  Version: 1.0.0
+  Owner: Subhamay Bhattacharyya
+  ProjectName:  API Lab 01:Lambda Proxy Integration with API Gateway
+  Modification History:
+    - 1.0.0 - Mar 18, 2025 -- Initial Version
+  StepsToTest: Manually verify the Stack.
+  StepsToCleanup: Stack delete command
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      ################################## Project Name and Environment ##############################
+      - Label:
+          default: 'Project Name and Environment:'
+        Parameters:
+          - ProjectName
+          - Environment
+      ################################## GitHub Attributes #########################################
+      - Label:
+          default: 'GitHub Attributes:'
+        Parameters:
+          - GitHubRef
+          - GitHubURL
+          - GitHubWFRunNumber
+          - GitHubSHA
+          - GitHubRepository
+          - CiBuild
+      ################################## Code Repository ###########################################
+      - Label:
+          default: 'Code Repository:'
+        Parameters:
+          - CodeRepositoryS3Bucket
+          - LambdaCodeRepositoryS3Bucket
+      ################################## KMS #######################################################
+      - Label:
+          default: "KMS Key:"
+        Parameters:
+          - KmsMasterKeyArn
+      ################################## VPC Stack #################################################
+      - Label:
+          default: "VPC Stack Configuration:"
+        Parameters:
+          - VpcStackName
+      ################################## Lambda ####################################################
+      - Label:
+          default: "Lambda Function Configuration:"
+        Parameters:
+        - LambdaFunctionBaseName
+        - LambdaFunctionDescription
+        - LambdaRuntime
+        - LambdaFunctionTimeoutSecs
+        - LambdaFunctionMemory
+      ################################## Api Gateway ###############################################
+      - Label:
+          default: "API Gateway Configuration:"
+        Parameters:
+        - ApiBaseName
+        - ApiDescription
+        - ProtocolType
+        - EndpointType
+        - ApiStageName
+        - ResourcePath
+    ParameterLabels:
+      ################################## Project Name and Environment ##############################
+      ProjectName:
+        default: "Name of the Project."
+      Environment:
+        default: "Name of the Deployment Environment."
+      ################################## GitHub Attributes #########################################
+      GitHubRef:
+        default: "GitHub Reference Branch or Tag."
+      GitHubURL:
+        default: "URL of the GitHub Repository."
+      GitHubWFRunNumber:
+        default: "GitHub Workflow Execution Run Number."
+      GitHubSHA:
+        default: "GitHub Commit SHA."
+      GitHubRepository:
+        default: "Name of the GitHub Repository."
+      CiBuild:
+        default: "Continuous Integration Build Identifier."
+      ################################## Code Repository Bucket ####################################
+      CodeRepositoryS3Bucket:
+        default: S3 Bucket where the nested stack templates are available.
+      LambdaCodeRepositoryS3Bucket:
+        default: S3 Bucket where the Lambda code with dependencies are available.
+      ################################## KMS #######################################################
+      KmsMasterKeyArn:
+        default: "KMS Master Key Arn."
+      ###################################### VPC Stack #############################################
+      VpcStackName:
+        default: "Name of the VPC Stack."
+      ################################## Lambda ####################################################
+      LambdaFunctionBaseName:
+        default: "Base name of the Get Users Lambda function."
+      LambdaFunctionDescription:
+        default: "Description of the Get Users Lambda function."
+      LambdaRuntime:
+        default: "Runtime environment for the Lambda function."
+      LambdaFunctionTimeoutSecs:
+        default: "Timeout for the Lambda function in seconds."
+      LambdaFunctionMemory:
+        default: "Memory allocation for the Lambda function."
+      ################################## Api Gateway ###############################################
+      ApiBaseName:
+        default: "Base name of the API."
+      ApiDescription:
+        default: "Description of the API."
+      ProtocolType:
+        default: "Protocol type for the API."
+      EndpointType:
+        default: "Endpoint type for the API."
+      ApiStageName:
+        default: "Name of the API Gateway stage."
+      ResourcePath:
+        default: "Resource path for the API Gateway."
+Parameters:
+  ###################################### Project Name and Environment ##############################
+  ProjectName:
+    Default: apigw-01-py-cft
+    Description: The Project name to be used as a resource tag value.
+    Type: String
+    MinLength: "5"
+    MaxLength: "30"
+    AllowedPattern: ^[a-z0-9-]+$
+    ConstraintDescription: The length should be between 5 and 30, must contain only
+      lowercase alphabets, numbers, or dashes.
+
+  Environment:
+    Default: devl
+    Description: The Environment name to be used as a resource tag value.
+    Type: String
+    AllowedValues:
+      - devl
+      - test
+      - prod
+    ConstraintDescription: The Environment must be devl / test or prod
+  ###################################### GitHub Attributes #########################################
+  GitHubRef:
+    Default: ref_name
+    Description: GitHub Ref name to be used as a resource tag value.
+    Type: String
+    AllowedPattern: ^[a-zA-Z0-9/_-]+$
+    ConstraintDescription: The GitHub Ref Name can only contain alphanumeric
+      characters, slashes, underscores, and hyphens.
+
+  GitHubURL:
+    Default: https://github.com/subhamay-bhattacharyya/1111-api-gateway-py-cft
+    Description: GitHub URL to be used as a resource tag value.
+    Type: String
+    AllowedPattern: ^https://github.com/[a-zA-Z0-9._-]+/[a-zA-Z0-9._-]+/?$
+    ConstraintDescription: The GitHub URL must start with 'https://github.com/' and
+      can only contain alphanumeric characters, dots, underscores, and hyphens.
+
+  GitHubWFRunNumber:
+    Default: "1"
+    Description: The Workflow run number to be used as a resource tag value.
+    Type: Number
+
+  GitHubSHA:
+    Default: d3b07384d113edec49eaa6238ad5ff00f6fb3796
+    Description: The sha value of the last commit to be used as a resource tag value.
+    Type: String
+    AllowedPattern: ^[a-fA-F0-9]{40}$
+    ConstraintDescription: The SHA value must be a 40-character hexadecimal string.
+
+  GitHubRepository:
+    Default: 1111-api-gateway-py-cft
+    Description: The GitHub Repository name to be used as a resource tag value.
+    Type: String
+    MinLength: "10"
+    MaxLength: "30"
+    AllowedPattern: ^\d{4}-[a-z]+(-[a-z]+)*$
+    ConstraintDescription: The repository length should be between 10 and 30, must
+      contain only lowercase letters, numbers, dashes, dots, and should start
+      with a letter.
+
+  CiBuild:
+    Default: ''
+    Description: Ci Build of the feature branch to be appended to a resource name.
+    Type: String
+  ###################################### Code Repository ###########################################
+  CodeRepositoryS3Bucket:
+    Default: subhamay-aws-cfn-nested-stack-templates-us-east-1
+    Description: S3 Bucket for the nested stack templates.
+    Type: String
+    AllowedPattern: ^[a-z0-9.-]{3,63}$
+    ConstraintDescription: The S3 bucket name must be between 3 and 63 characters
+      long, and can only contain lowercase letters, numbers, dots, and hyphens. ###################################### GitHub Attributes #########################################
+
+  LambdaCodeRepositoryS3Bucket:
+    Default: subhamay-code-repo-637423502513-devl-us-east-1
+    Description: S3 Bucket Name For Lambda Code Repository.
+    Type: String
+    AllowedPattern: ^[a-z0-9.-]{3,63}$
+    ConstraintDescription: The S3 bucket name must be between 3 and 63 characters
+      long, and can only contain lowercase letters, numbers, dots, and hyphens.
+  ###################################### KMS #######################################################
+  KmsMasterKeyArn:
+    Default: "arn:aws:kms:us-east-1:637423502513:key/494509e4-3bc5-44b8-9c4d-12449900d395"
+    Description: "The KMS master key ARN to be used for server-side encryption."
+    Type: String
+    AllowedPattern: "^$|^arn:aws:kms:[a-z0-9-]+:[0-9]{12}:key/[a-zA-Z0-9-]+$"
+    ConstraintDescription: "The ARN must be a valid KMS key ARN."
+
+  ###################################### VPC Stack #################################################
+  VpcStackName:
+    Default: private-vpc-root-stack
+    Description: The name of the VPC stack.
+    Type: String
+    AllowedPattern: ^[a-zA-Z0-9-]+$
+    ConstraintDescription: The stack name can only contain alphanumeric characters and hyphens.
+
+  ##################################### Lambda Functions ###########################################
+  LambdaFunctionBaseName:
+    Default: proxy-integration-lambda
+    Description: "The base name for the Lambda function. The region and environment will be appended as a suffix by the template."
+    Type: String
+    MinLength: "5"
+    MaxLength: "40"
+    AllowedPattern: "^[a-zA-Z][a-zA-Z0-9-]*$"
+    ConstraintDescription: "The name must be between 5 and 40 characters long, start with a letter, and may include letters, numbers, or hyphens."
+
+  LambdaFunctionDescription:
+    Default: Lambda function to be used for API Gateway Proxy Integration.
+    Description: "A description of the Lambda function."
+    Type: String
+    MaxLength: "200"
+    AllowedPattern: "^$|^[A-Z][a-zA-Z0-9 .,]*$"
+    ConstraintDescription: "The description must be 0?200 characters long, start with an uppercase letter, and may include letters, numbers, spaces, dots, or commas."
+
+  LambdaRuntime:
+    Default: python3.9
+    Description: "Specifies the runtime for the Lambda function."
+    Type: String
+    AllowedValues: [python3.8, python3.9, python3.10, python3.11, python3.12]
+    ConstraintDescription: "The runtime must be Python 3.8 or higher, or Node.js 18.x or higher."
+
+  LambdaFunctionTimeoutSecs:
+    Default: "300"
+    Description: "The timeout period for the Lambda function in seconds."
+    Type: Number
+    MinValue: "3"
+    MaxValue: "900"
+    ConstraintDescription: "The timeout must be between 3 and 900 seconds."
+
+  LambdaFunctionMemory:
+    Default: "256"
+    Description: "The amount of memory allocated to the Lambda function in MB."
+    Type: Number
+    MinValue: "128"
+    MaxValue: "10240"
+    ConstraintDescription: "The memory allocation must be between 128 and 10,240 MB."
+
+  ###################################### Api Gateway ###############################################
+  ApiBaseName:
+    Default: "lambda-proxy-integration"
+    Description: "Base name of the API Gateway."
+    Type: String
+    MinLength: 5
+    MaxLength: 30
+    AllowedPattern: "^[a-z0-9-]+$"
+    ConstraintDescription: "The length should be between 5 and 30, must contain only lowercase alphabets, numbers, or dashes."
+
+  ApiDescription:
+    Default: "API Gateway with proxy integration to Lambda function using Python."
+    Description: "Description of the API Gateway."
+    Type: String
+    MaxLength: 200
+    AllowedPattern: "^[A-Za-z0-9 .,-]+$"
+    ConstraintDescription: "The length should be upto 200, must contain only lowercase alphabets, numbers, or dashes."
+
+  ProtocolType:
+    Default: REST
+    Description: "The protocol type for the API Gateway."
+    Type: String
+    AllowedValues: ["HTTP", "WEBSOCKET", "REST"]
+    ConstraintDescription: "The protocol type must be HTTP or WEBSOCKET."
+
+  EndpointType:
+    Default: REGIONAL
+    Description: "The endpoint type for the API Gateway."
+    Type: String
+    AllowedValues: ["REGIONAL", "EDGE", "PRIVATE"]
+    ConstraintDescription: "The endpoint type must be REGIONAL, EDGE or PRIVATE."
+
+  ApiStageName:
+    Default: v1
+    Description: "The name of the API Gateway stage."
+    Type: String
+    MinLength: 2
+    MaxLength: 20
+    AllowedPattern: "^[a-z0-9-]+$"
+    ConstraintDescription: "The length should be between 2 and 20, must contain only lowercase alphabets, numbers, or dashes."
+
+  ResourcePath: 
+    Default: "hello"
+    Description: "The resource path for the API Gateway."
+    Type: String
+    MinLength: 1
+    MaxLength: 50
+    AllowedPattern: "^[a-zA-Z0-9-]+$"
+    ConstraintDescription: "The length should be between 1 and 50, must contain only alphabets, numbers, or dashes."
+
+Resources:
+
+  ###################################### Lambda IAM Role ###########################################
+  LambdaRole:
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Retain
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${CodeRepositoryS3Bucket}.s3.amazonaws.com/iam/iam-role.yaml"
+      Parameters:
+        ServiceName: "lambda"
+        RolePath: "/"
+        RoleBaseName: "lambda-role"
+        RoleDescription: "IAM role used by API Gateway Lab-01 Lambda Function."
+        LambdaFunctionBaseName: !Ref LambdaFunctionBaseName
+        KmsMasterKeyArn: !Ref KmsMasterKeyArn
+        LambdaTracingMode: "Active"
+        ProjectName: !Ref ProjectName
+        Environment: !Ref Environment
+        GitHubRef: !Ref GitHubRef
+        GitHubURL: !Ref GitHubURL
+        GitHubWFRunNumber: !Ref GitHubWFRunNumber
+        GitHubSHA: !Ref GitHubSHA
+        GitHubRepository: !Ref GitHubRepository
+        CiBuild: !Ref CiBuild
+      TimeoutInMinutes: 15
+
+  ###################################### CloudWatch Log Group ######################################
+  LambdaLogGroup:
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Retain
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${CodeRepositoryS3Bucket}.s3.amazonaws.com/cloudwatch/log-group.yaml"
+      Parameters:
+        LogGroupServiceName: "lambda"
+        LogGroupBaseName: !Ref LambdaFunctionBaseName
+        LogRetentionInDays: "5"
+        KmsMasterKeyArn: !Ref KmsMasterKeyArn
+        LogGroupClass: "STANDARD"
+        ProjectName: !Ref ProjectName
+        Environment: !Ref Environment
+        GitHubRef: !Ref GitHubRef
+        GitHubURL: !Ref GitHubURL
+        GitHubWFRunNumber: !Ref GitHubWFRunNumber
+        GitHubSHA: !Ref GitHubSHA
+        GitHubRepository: !Ref GitHubRepository
+        CiBuild: !Ref CiBuild
+      TimeoutInMinutes: 15
+
+  ##################################### Lambda Function ############################################
+  LambdaFunction:
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Retain
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${CodeRepositoryS3Bucket}.s3.amazonaws.com/lambda/lambda-function.yaml"
+      Parameters:
+        CodeRepositoryS3Bucket: !Ref LambdaCodeRepositoryS3Bucket
+        LambdaFunctionBaseName: !Ref LambdaFunctionBaseName
+        LambdaFunctionDescription: !Ref LambdaFunctionDescription
+        LambdaHandler: "app.lambda_handler"
+        LambdaRuntime: !Ref LambdaRuntime
+        LambdaExecutionRoleArn: !GetAtt LambdaRole.Outputs.RoleArn
+        LambdaFunctionTimeoutSecs: !Ref LambdaFunctionTimeoutSecs
+        LambdaFunctionMemory: !Ref LambdaFunctionMemory
+        SubnetIds: !ImportValue 
+          Fn::Sub: "${VpcStackName}-PrivateSubnetIds"
+        SecurityGroupIds: !ImportValue 
+          Fn::Sub: "${VpcStackName}-VpcEndpointSecurityGroupId"
+        ProjectName: !Ref ProjectName
+        Environment: !Ref Environment
+        GitHubRef: !Ref GitHubRef
+        GitHubURL: !Ref GitHubURL
+        GitHubWFRunNumber: !Ref GitHubWFRunNumber
+        GitHubSHA: !Ref GitHubSHA
+        GitHubRepository: !Ref GitHubRepository
+        CiBuild: !Ref CiBuild
+      TimeoutInMinutes: 15
+
+  ###################################### API Gateway - Rest API  ###################################
+  RestApi:
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Retain
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${CodeRepositoryS3Bucket}.s3.amazonaws.com/api-gateway/rest-api.yaml"
+      Parameters:
+        ApiBaseName: !Ref ApiBaseName
+        ApiDescription: !Ref ApiDescription
+        ProtocolType: !Ref ProtocolType
+        EndpointType: !Ref EndpointType
+        ProjectName: !Ref ProjectName
+        Environment: !Ref Environment
+        GitHubRef: !Ref GitHubRef
+        GitHubURL: !Ref GitHubURL
+        GitHubWFRunNumber: !Ref GitHubWFRunNumber
+        GitHubSHA: !Ref GitHubSHA
+        GitHubRepository: !Ref GitHubRepository
+        CiBuild: !Ref CiBuild
+      TimeoutInMinutes: 15
+
+  ###################################### Api Resource ##############################################
+  RestApiResource:
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Retain
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${CodeRepositoryS3Bucket}.s3.amazonaws.com/api-gateway/resource.yaml"
+      Parameters:
+        RestApiId: !GetAtt RestApi.Outputs.RestApiId
+        ParentResourceId: !GetAtt RestApi.Outputs.RootResourceId
+        ResourcePath: !Ref ResourcePath
+      TimeoutInMinutes: 15
+
+  ###################################### Api Method - ANY ##########################################
+  ApiMethodAny:
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Retain
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${CodeRepositoryS3Bucket}.s3.amazonaws.com/api-gateway/method.yaml"
+      Parameters:
+        RestApiId: !GetAtt RestApi.Outputs.RestApiId
+        ProtocolType: "REST"
+        HttpMethod: "ANY"
+        ResourceId: !GetAtt RestApiResource.Outputs.ResourceId
+        LambdaFunctionArn: !GetAtt LambdaFunction.Outputs.LambdaFunctionArn
+        LambdaInvokeTriggeredByRestApi: "true"
+        ResourcePath: !Ref ResourcePath
+      TimeoutInMinutes: 15
+
+  ###################################### Api Deployment ############################################
+  ApiDeployment:
+    DependsOn:
+    - ApiMethodAny
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Retain
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${CodeRepositoryS3Bucket}.s3.amazonaws.com/api-gateway/deployment.yaml"
+      Parameters:
+        RestApiId: !GetAtt RestApi.Outputs.RestApiId
+        StageName: !Ref ApiStageName
+        StageDescription: "Version 1 of the API."
+        ProjectName: !Ref ProjectName
+        Environment: !Ref Environment
+        GitHubRef: !Ref GitHubRef
+        GitHubURL: !Ref GitHubURL
+        GitHubWFRunNumber: !Ref GitHubWFRunNumber
+        GitHubSHA: !Ref GitHubSHA
+        GitHubRepository: !Ref GitHubRepository
+        CiBuild: !Ref CiBuild
+      TimeoutInMinutes: 15
+
+Outputs:
+  ###################################### Lambda IAM Role ###########################################
+  LambdaExecutionRoleName:
+    Description: Lambda Execution Role Name
+    Value: !GetAtt LambdaRole.Outputs.RoleName
+  LambdaExecutionRoleArn:
+    Description: Lambda Execution Role Arn
+    Value: !GetAtt LambdaRole.Outputs.RoleArn
+  LambdaExecutionRoleId:
+    Description: Lambda Execution Role Id
+    Value: !GetAtt LambdaRole.Outputs.RoleId
+  ###################################### CloudWatch Log Group - ####################################
+  LambdaLogGroup:
+    Description: Lambda Add Users Log Group
+    Value: !GetAtt LambdaLogGroup.Outputs.LogGroupArn
+  ##################################### Lambda Function ###########################################
+  LambdaFunctionArn:
+    Description: Add Users Lambda Function Arn
+    Value: !GetAtt LambdaFunction.Outputs.LambdaFunctionArn
+  ###################################### Rest Api ##################################################
+  RestApiEndpoint:
+    Description: Rest Api Endpoint
+    Value: !Sub "https://${RestApi.Outputs.RestApiId}.execute-api.${AWS::Region}.amazonaws.com/${ApiStageName}"
+  RestApiId:
+    Description: Rest Api Id
+    Value: !GetAtt RestApi.Outputs.RestApiId
+  RestApiRootResourceId:
+    Description: Rest Api Root Resource Id
+    Value: !GetAtt RestApi.Outputs.RootResourceId
+  RestApiArn:
+    Description: "ARN of API Gateway"
+    Value: !Sub "arn:aws:apigateway:${AWS::Region}::/restapis/${RestApi}"
+  ###################################### Api Stage #################################################
+  RestApiStageName:
+    Description: Api Stage Name
+    Value: !GetAtt ApiDeployment.Outputs.RestApiStage
