@@ -1,0 +1,16 @@
+cd <repo root>/
+mkdir -p lambda-code/src && cd lambda-code/src
+touch requirements.txt
+<Add the packages with version to be installed>
+Create the virtual env : python3 -m venv myenv
+activate the virtual env : source myenv/bin/activate
+Upgrade pip: pip install --upgrade pip
+Install the package : pip install -r requirements.txt
+Verify the installed packages: pip list
+create a package dir : mkdir package
+Copy the libraries to the package directory (replace 3.x with the actual python version like 3.12): cp -r myenv/lib/python3.x/site-packages/* package/
+Create the lambda_function.py under package: cd package && touch lambda_function.py
+cd package && zip -r ../<lambda-function-base-name>.zip .
+
+## Command to uninstall the libraries
+pip freeze | xargs pip uninstall -y
