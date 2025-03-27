@@ -151,12 +151,12 @@ Parameters:
     AllowedPattern: "^[A-Z][A-Z-]+$"
     ConstraintDescription: "The length of the KMS Key Alias should be beteen 5 and 20 and can only contain lowercase alphanumeric characters and dash."
 
-  KmsMasterKeyArn:
-    Default: "arn:aws:kms:us-east-1:637423502513:key/494509e4-3bc5-44b8-9c4d-12449900d395"
-    Description: "The KMS master key ARN to be used for server-side encryption."
-    Type: String
-    AllowedPattern: "^$|^arn:aws:kms:[a-z0-9-]+:[0-9]{12}:key/[a-zA-Z0-9-]+$"
-    ConstraintDescription: "The ARN must be a valid KMS key ARN."
+  # KmsMasterKeyArn:
+  #   Default: "arn:aws:kms:us-east-1:637423502513:key/494509e4-3bc5-44b8-9c4d-12449900d395"
+  #   Description: "The KMS master key ARN to be used for server-side encryption."
+  #   Type: String
+  #   AllowedPattern: "^$|^arn:aws:kms:[a-z0-9-]+:[0-9]{12}:key/[a-zA-Z0-9-]+$"
+  #   ConstraintDescription: "The ARN must be a valid KMS key ARN."
 
 Resources:
   ###################################### Resources ###############################################
