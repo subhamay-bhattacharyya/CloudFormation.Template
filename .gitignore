@@ -1,0 +1,47 @@
+# Node.js dependencies (if applicable)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python dependencies (if applicable)
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.env
+*.venv
+
+# Logs
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Editor-specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# GitHub Actions specific
+# Ignore local testing workflows
+.local-test-workflows/
+
+# Ignore temporary files
+*.tmp
+*.bak
+
+# Ignore build artifacts
+dist/
+build/
+*.zip
+*.tar.gz
+
+# Ignore secrets
+secrets.env
+.env
+
+# Ignore MacOs temporary files
+*.DS_Store

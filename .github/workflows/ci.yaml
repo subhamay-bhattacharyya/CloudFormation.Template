@@ -1,0 +1,79 @@
+# This is a basic workflow to help you get started with Actions
+name: Validate the CloudFormation template
+description: This workflow will validate the CloudFormation template
+run-name: Validate the CloudFormation template by ${{ github.actor }} in ${{ github.ref_name}}
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - 'feature**'
+    paths-ignore:
+      - '**/.github/workflows/**.yaml'
+      - '**/**.md'
+      - '**/LICENSE'
+      - '**/VERSION'
+      - '**/CODEOWNERS'
+      - '.gitignore'
+
+permissions:
+  id-token: write                       # This is required for aws oidc connection
+  contents: write                       # This is required for actions/checkout
+  pull-requests: write                  # This is required for gh bot to comment PR
+  issues: write                         # This is required for gh bot to comment issues
+
+jobs:
+  sam-build:
+    name: Build and Package
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: read
+      # To report GitHub Actions status checks
+      statuses: write
+      # To use OIDC
+      id-token: write
+
+    steps:
+      - name: Checkout Code
+        id: git-checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure AWS credentials from AWS account
+        id: aws-config
+        uses: aws-actions/configure-aws-credentials@v4.0.2
+        with:
+          role-to-assume: "arn:aws:iam::637423502513:role/subhamay-github-oidc-role"
+          aws-region: "us-east-1"
+          role-session-name: github-aws-cloudformation-oidc
+
+      - name: Run Checkov Scan
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: ${{ github.workspace }}
+          soft_fail: true # optional: do not return an error code if there are failed checks
+          # check: CKV_AWS_1 # optional: run only a specific check_id. can be comma separated list
+          # skip_check: CKV_AWS_2 # optional: skip a specific check_id. can be comma separated list
+          # quiet: true # optional: display only failed checks
+          # framework: terraform # optional: run only on a specific infrastructure {cloudformation,terraform,kubernetes,all}
+          # output_format: sarif # optional: the output format, one of: cli, json, junitxml, github_failed_only, or sarif. Default: sarif
+          # download_external_modules: true # optional: download external terraform modules from public git repositories and terraform registry
+          # log_level: DEBUG # optional: set log level. Default WARNING
+          # config_file: path/this_file
+          # baseline: cloudformation/.checkov.baseline # optional: Path to a generated baseline file. Will only report results not in the baseline.
+          # container_user: 1000 # optional: Define what UID and / or what GID to run the container under to prevent permission issues
+
+      - name: Convert SARIF to Markdown
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: ${{ github.workspace }}/results.sarif  # Change this to your SARIF file path
+          category: "code-analysis"
+
+      - name: Append Markdown to GitHub Summary
+        run: |
+          echo "### Checkov Scan Report Summary" >> $GITHUB_STEP_SUMMARY
+          cat ${{ github.workspace }}/results.sarif.md >> $GITHUB_STEP_SUMMARY
