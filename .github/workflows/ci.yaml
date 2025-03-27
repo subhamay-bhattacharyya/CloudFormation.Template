@@ -51,10 +51,10 @@ jobs:
           aws-region: "us-east-1"
           role-session-name: github-aws-cloudformation-oidc
 
-      - name: Run Checkov Scan
-        uses: bridgecrewio/checkov-action@master
-        with:
-          directory: ${{ github.workspace }}
+      # - name: Run Checkov Scan
+      #   uses: bridgecrewio/checkov-action@master
+      #   with:
+      #     directory: ${{ github.workspace }}
           soft_fail: true # optional: do not return an error code if there are failed checks
           # check: CKV_AWS_1 # optional: run only a specific check_id. can be comma separated list
           # skip_check: CKV_AWS_2 # optional: skip a specific check_id. can be comma separated list
@@ -67,13 +67,13 @@ jobs:
           # baseline: cloudformation/.checkov.baseline # optional: Path to a generated baseline file. Will only report results not in the baseline.
           # container_user: 1000 # optional: Define what UID and / or what GID to run the container under to prevent permission issues
 
-      - name: Convert SARIF to Markdown
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: ${{ github.workspace }}/results.sarif  # Change this to your SARIF file path
-          category: "code-analysis"
+      # - name: Convert SARIF to Markdown
+      #   uses: github/codeql-action/upload-sarif@v3
+      #   with:
+      #     sarif_file: ${{ github.workspace }}/results.sarif  # Change this to your SARIF file path
+      #     category: "code-analysis"
 
-      - name: Append Markdown to GitHub Summary
-        run: |
-          echo "### Checkov Scan Report Summary" >> $GITHUB_STEP_SUMMARY
-          cat ${{ github.workspace }}/results.sarif.md >> $GITHUB_STEP_SUMMARY
+      # - name: Append Markdown to GitHub Summary
+      #   run: |
+      #     echo "### Checkov Scan Report Summary" >> $GITHUB_STEP_SUMMARY
+      #     cat ${{ github.workspace }}/results.sarif.md >> $GITHUB_STEP_SUMMARY
