@@ -159,6 +159,6 @@ Parameters:
     ConstraintDescription: "The ARN must be a valid KMS key ARN."
 
 Resources:
-
+  ###################################### Resources ###############################################
 Outputs:
   ###################################### Outputs #################################################
