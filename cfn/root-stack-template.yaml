@@ -139,7 +139,7 @@ Parameters:
     Type: String
     AllowedPattern: ^[a-z0-9.-]{3,63}$
     ConstraintDescription: The S3 bucket name must be between 3 and 63 characters
-      long, and can only contain lowercase letters, numbers, dots, and hyphens. ###################################### GitHub Attributes #########################################
+      long, and can only contain lowercase letters, numbers, dots, and hyphens.
 
   ###################################### KMS #######################################################
   KmsMasterKeyAlias:
@@ -160,5 +160,8 @@ Parameters:
 
 Resources:
   ###################################### Resources ###############################################
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties: {}
 Outputs:
   ###################################### Outputs #################################################
