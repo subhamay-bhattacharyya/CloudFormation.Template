@@ -38,8 +38,43 @@ Metadata:
       - Label:
           default: "KMS Key:"
         Parameters:
-          - KmsMasterKeyAlias
+          # - KmsMasterKeyAlias
           - KmsMasterKeyArn
+      ################################## VPC Stack #################################################
+      - Label:
+          default: "VPC Stack Configuration:"
+        Parameters:
+          - VpcStackName
+      ################################## S3 Bucket #################################################
+      - Label:
+          default: "S3 Bucket Configuration:"
+        Parameters:
+          - S3BucketBaseName
+          - S3BucketBlockPublicAcls
+          - S3BucketBlockPublicPolicy
+          - S3BucketIgnorePublicAcls
+          - S3BucketRestrictPublicBuckets
+          - BucketVersioningEnabled
+      ################################## Lifecycle Configuration ###################################
+      - Label:
+          default: "S3 Bucket Lifecycle Configuration:"
+        Parameters:
+          - S3LifecycleConfigurationEnabled
+          - TransitionPrefix
+          - StandardIATransitionEnabled
+          - TransitionToIADays
+          - IntelligentTieringEnabled
+          - TransitionToITDays
+          - OneZoneIATransitionEnabled
+          - TransitionToOZIADays
+          - GlacierIRTransitionEnabled
+          - TransitionToGlacierIRDays
+          - GlacierTransitionEnabled
+          - TransitionToGlacierDays
+          - DeepArchiveTransitionEnabled
+          - TransitionToDeepArchiveDays
+          - EnableExpiration
+          - ExpirationDays
     ParameterLabels:
       ################################## Project Name and Environment ##############################
       ProjectName:
@@ -63,10 +98,59 @@ Metadata:
       CodeRepositoryS3Bucket:
         default: S3 Bucket where the nested stack templates are available.
       ################################## KMS #######################################################
-      KmsMasterKeyAlias:
-        default: "KMS Master Key Alias."
+      # KmsMasterKeyAlias:
+      #   default: "KMS Master Key Alias."
       KmsMasterKeyArn:
         default: "KMS Master Key Arn."
+      ###################################### VPC Stack #############################################
+      VpcStackName:
+        default: "Name of the VPC Stack."
+      ################################## S3 Bucket #################################################
+      S3BucketBaseName:
+        default: "Base name for the S3 bucket."
+      S3BucketBlockPublicAcls:
+        default: "Block public ACLs setting."
+      S3BucketBlockPublicPolicy:
+        default: "Allow Block Public Policy."
+      S3BucketIgnorePublicAcls:
+        default: "Ignore public ACLs setting."
+      S3BucketRestrictPublicBuckets:
+        default: "Restrict public buckets setting."
+      BucketVersioningEnabled:
+        default: "Enable versioning for the bucket."
+      ################################## Lifecycle Configuration ###################################
+      S3LifecycleConfigurationEnabled:
+        default: "Enable lifecycle configuration for the bucket."
+      TransitionPrefix:
+        default: "Prefix for lifecycle transition rules."
+      StandardIATransitionEnabled:
+        default:  "Enable transition to Standard-IA storage class."
+      TransitionToIADays:
+        default: "Number of days before transitioning to Standard-IA."
+      IntelligentTieringEnabled:
+        default: "Enable transition to Intelligent-Tiering storage class."
+      TransitionToITDays:
+        default: "Number of days before transitioning to Intelligent-Tiering."
+      OneZoneIATransitionEnabled:
+        default: "Enable transition to One Zone-IA storage class."
+      TransitionToOZIADays:
+        default: "Number of days before transitioning to One Zone-IA."
+      GlacierIRTransitionEnabled:
+        default: "Enable transition to Glacier Instant Retrieval storage class."
+      TransitionToGlacierIRDays:
+        default: "Number of days before transitioning to Glacier Instant Retrieval."
+      GlacierTransitionEnabled:
+        default: "Number of days before transitioning to Glacier."
+      TransitionToGlacierDays:
+        default: "Number of days before transitioning to Glacier."
+      DeepArchiveTransitionEnabled:
+        default: "Enable transition to Deep Archive storage class."
+      TransitionToDeepArchiveDays:
+        default: "Number of days before transitioning to Deep Archive."
+      EnableExpiration:
+        default: "Enable object expiration."
+      ExpirationDays:
+        default: "Number of days before object expiration."
 Parameters:
   ###################################### Project Name and Environment ##############################
   ProjectName:
@@ -126,7 +210,7 @@ Parameters:
     AllowedPattern: ^\d{4}-[a-z]+(-[a-z]+)*$
     ConstraintDescription: The repository length should be between 10 and 30, must
       contain only lowercase letters, numbers, dashes, dots, and should start
-      with a letter.
+      with four digit zero padded number.
 
   CiBuild:
     Default: ''
@@ -142,25 +226,223 @@ Parameters:
       long, and can only contain lowercase letters, numbers, dots, and hyphens.
 
   ###################################### KMS #######################################################
-  KmsMasterKeyAlias:
-    Default: "SB-KMS"
-    Description: "The KMS master key alias to be used for server-side encryption."
-    Type: String
-    MinLength: "5"
-    MaxLength: "20"
-    AllowedPattern: "^[a-z0-9-]+$"
-    ConstraintDescription: "The length of the KMS Key Alias should be between 5 and 20 and can only contain lowercase alphanumeric characters and dashes."
+  # KmsMasterKeyAlias:
+  #   Default: "SB-KMS"
+  #   Description: "The KMS master key alias to be used for server-side encryption."
+  #   Type: String
+  #   MinLength: "5"
+  #   MaxLength: "20"
+  #   AllowedPattern: "^[a-z0-9-]+$"
+  #   ConstraintDescription: "The length of the KMS Key Alias should be between 5 and 20 and can only contain lowercase alphanumeric characters and dashes."
+
   KmsMasterKeyArn:
     Default: "arn:aws:kms:us-east-1:637423502513:key/494509e4-3bc5-44b8-9c4d-12449900d395"
     Description: "The KMS master key ARN to be used for server-side encryption."
     Type: String
     AllowedPattern: "^$|^arn:aws:kms:[a-z0-9-]+:[0-9]{12}:key/[a-zA-Z0-9-]+$"
     ConstraintDescription: "The ARN must be a valid KMS key ARN."
+  ###################################### VPC Stack #################################################
+  VpcStackName:
+    Default: private-vpc-root-stack
+    Description: The name of the VPC stack.
+    Type: String
+    AllowedPattern: ^[a-zA-Z0-9-]+$
+    ConstraintDescription: The stack name can only contain alphanumeric characters and hyphens.
+    MinLength: 3
+    MaxLength: 128
 
+  ###################################### S3 Bucket #################################################
+  S3BucketBaseName:
+    Default: weather-dashboard
+    Description: "The base name for the S3 bucket used for source data. The region will be added as a suffix by the template."
+    Type: String
+    MinLength: "3"
+    MaxLength: "20"
+    AllowedPattern: "^[a-z0-9.-]{3,20}$"
+    ConstraintDescription: "The S3 bucket name must be 3?63 characters long and can only include lowercase letters, numbers, dots, and hyphens."
+
+  S3BucketBlockPublicAcls:
+    Default: "true"
+    Description: "Indicates whether to block public ACLs for the S3 bucket."
+    Type: String
+    AllowedValues: ["true", "false"]
+
+  S3BucketBlockPublicPolicy:
+    Default: "true"
+    Description: "Indicates whether to block public policies for the S3 bucket."
+    Type: String
+    AllowedValues: ["true", "false"]
+
+  S3BucketIgnorePublicAcls:
+    Default: "true"
+    Description: "Indicates whether to ignore public ACLs for the S3 bucket."
+    Type: String
+    AllowedValues: ["true", "false"]
+
+  S3BucketRestrictPublicBuckets:
+    Default: "true"
+    Description: "Indicates whether to restrict public access to the S3 bucket."
+    Type: String
+    AllowedValues: ["true", "false"]
+
+  BucketVersioningEnabled:
+    Default: "false"
+    Description: "Specifies whether versioning is enabled for the S3 bucket."
+    Type: String
+    AllowedValues: ["true", "false"]
+
+  ##################################### Lifecycle Configuration ###################################
+  S3LifecycleConfigurationEnabled:
+    Default: "false"
+    Description: "Indicates whether lifecycle configuration is enabled for the S3 bucket."
+    Type: String
+    AllowedValues: ["true", "false"]
+
+  TransitionPrefix:
+    Default: "data/"
+    Description: "Specifies the prefix for objects to apply lifecycle transitions."
+    Type: String
+
+  StandardIATransitionEnabled:
+    Default: "false"
+    Description: "Specifies whether objects are transitioned to Standard-IA storage."
+    Type: String
+    AllowedValues: ["true", "false"]
+
+  TransitionToIADays:
+    Default: "30"
+    Description: "The number of days before objects transition to Standard-IA storage."
+    Type: Number
+    MinValue: "30"
+    MaxValue: "185"
+
+  IntelligentTieringEnabled:
+    Default: "false"
+    Description: "Specifies whether objects are transitioned to Intelligent Tiering storage."
+    Type: String
+    AllowedValues: ["true", "false"]
+
+  TransitionToITDays:
+    Default: "60"
+    Description: "The number of days before objects transition to Intelligent Tiering storage."
+    Type: Number
+    MinValue: "60"
+    MaxValue: "365"
+
+  OneZoneIATransitionEnabled:
+    Default: "false"
+    Description: "Specifies whether objects are transitioned to One Zone-IA storage."
+    Type: String
+    AllowedValues: ["true", "false"]
+
+  TransitionToOZIADays:
+    Default: "90"
+    Description: "The number of days before objects transition to One Zone-IA storage."
+    Type: Number
+    MinValue: "90"
+    MaxValue: "365"
+
+  GlacierIRTransitionEnabled:
+    Default: "false"
+    Description: "Specifies whether objects are transitioned to Glacier Instant Retrieval storage."
+    Type: String
+    AllowedValues: ["true", "false"]
+
+  TransitionToGlacierIRDays:
+    Default: "120"
+    Description: "The number of days before objects transition to Glacier Instant Retrieval storage."
+    Type: Number
+    MinValue: "120"
+    MaxValue: "365"
+
+  GlacierTransitionEnabled:
+    Default: "false"
+    Description: "Specifies whether objects are transitioned to Glacier storage."
+    Type: String
+    AllowedValues: ["true", "false"]
+
+  TransitionToGlacierDays:
+    Default: "60"
+    Description: "The number of days before objects transition to Glacier storage."
+    Type: Number
+    MinValue: "60"
+    MaxValue: "500"
+
+  DeepArchiveTransitionEnabled:
+    Default: "false"
+    Description: "Specifies whether objects are transitioned to Deep Archive storage."
+    Type: String
+    AllowedValues: ["true", "false"]
+
+  TransitionToDeepArchiveDays:
+    Default: "365"
+    Description: "The number of days before objects transition to Deep Archive storage."
+    Type: Number
+    MinValue: "365"
+    MaxValue: "500"
+
+  EnableExpiration:
+    Default: "false"
+    Description: "Indicates whether expiration is enabled for objects in the S3 bucket."
+    Type: String
+    AllowedValues: ["true", "false"]
+
+  ExpirationDays:
+    Default: "90"
+    Description: "The number of days before objects in the S3 bucket are expired."
+    Type: Number
+    MinValue: "30"
+    MaxValue: "365"
 Resources:
-  ###################################### Resources ###############################################
-  # S3Bucket:
-  #   Type: AWS::S3::Bucket
-  #   Properties: {}
+  ###################################### S3 Bucket #################################################
+  S3Bucket:
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Retain
+    Type: AWS::CloudFormation::Stack
+    # DependsOn:
+    #   - LambdaRole
+    Properties:
+      TemplateURL: !Sub "https://${CodeRepositoryS3Bucket}.s3.amazonaws.com/s3/s3-bucket.yaml"
+      Parameters:
+        S3BucketBaseName: !Ref S3BucketBaseName
+        S3BucketBlockPublicAcls: !Ref S3BucketBlockPublicAcls
+        S3BucketBlockPublicPolicy: !Ref S3BucketBlockPublicPolicy
+        S3BucketIgnorePublicAcls: !Ref S3BucketIgnorePublicAcls
+        S3BucketRestrictPublicBuckets: !Ref S3BucketRestrictPublicBuckets
+        BucketVersioningEnabled: !Ref BucketVersioningEnabled
+        KmsMasterKeyArn: !Ref KmsMasterKeyArn
+        S3VpcEndpointId: !ImportValue
+          Fn::Sub: "${VpcStackName}-PrivateSubnetIds"
+        # IAMRoleBaseName: "lambda-role"
+        # WhitelistedUserId: AIDAZI2LGYSY7WDKOVKYW
+        # WhitelistedRoleId: AROAZI2LGYSYVKL4XJGIN
+        S3LifecycleConfigurationEnabled: !Ref S3LifecycleConfigurationEnabled
+        TransitionPrefix: !Ref TransitionPrefix
+        StandardIATransitionEnabled: !Ref StandardIATransitionEnabled
+        TransitionToIADays: !Ref TransitionToIADays
+        IntelligentTieringEnabled: !Ref IntelligentTieringEnabled
+        TransitionToITDays: !Ref TransitionToITDays
+        OneZoneIATransitionEnabled: !Ref OneZoneIATransitionEnabled
+        TransitionToOZIADays: !Ref TransitionToOZIADays
+        GlacierIRTransitionEnabled: !Ref GlacierIRTransitionEnabled
+        TransitionToGlacierIRDays: !Ref TransitionToGlacierIRDays
+        GlacierTransitionEnabled: !Ref GlacierTransitionEnabled
+        TransitionToGlacierDays: !Ref TransitionToGlacierDays
+        DeepArchiveTransitionEnabled: !Ref DeepArchiveTransitionEnabled
+        TransitionToDeepArchiveDays: !Ref TransitionToDeepArchiveDays
+        EnableExpiration: !Ref EnableExpiration
+        ExpirationDays: !Ref ExpirationDays
+        ProjectName: !Ref ProjectName
+        Environment: !Ref Environment
+        GitHubRef: !Ref GitHubRef
+        GitHubURL: !Ref GitHubURL
+        GitHubWFRunNumber: !Ref GitHubWFRunNumber
+        GitHubSHA: !Ref GitHubSHA
+        GitHubRepository: !Ref GitHubRepository
+        CiBuild: !Ref CiBuild
+      TimeoutInMinutes: 30
 Outputs:
-  ###################################### Outputs #################################################
+  ###################################### S3 Bucket #################################################
+  S3BucketArn:
+    Description: S3 Bucket Arn
+    Value: !GetAtt S3Bucket.Outputs.S3BucketArn

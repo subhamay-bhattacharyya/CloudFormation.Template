@@ -51,10 +51,10 @@ jobs:
           aws-region: "us-east-1"
           role-session-name: github-aws-cloudformation-oidc
 
-      # - name: Run Checkov Scan
-      #   uses: bridgecrewio/checkov-action@master
-      #   with:
-      #     directory: ${{ github.workspace }}
+      - name: Run Checkov Scan
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: ${{ github.workspace }}
           soft_fail: true # optional: do not return an error code if there are failed checks
           # check: CKV_AWS_1 # optional: run only a specific check_id. can be comma separated list
           # skip_check: CKV_AWS_2 # optional: skip a specific check_id. can be comma separated list
