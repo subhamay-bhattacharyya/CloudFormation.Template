@@ -1,0 +1,43 @@
+name: Configure Repository Environments
+description: This workflow will create environments
+run-name: Configure Repository Environments by ${{ github.actor }} in ${{ github.ref_name}}
+
+on:
+  workflow_dispatch:  # Trigger manually
+
+jobs:
+  create-envs-and-secrets:
+    runs-on: ubuntu-latest
+
+    env:
+      ENVIRONMENTS: "devl test prod"
+
+    steps:
+
+      - name: Authenticate GitHub CLI
+        run: echo "${{ secrets.GH_ADMIN_TOKEN }}" | gh auth login --with-token
+
+      - name: Create Environments and Add Secrets
+        run: |
+          echo "Creating environments and secrets..."
+          for ENV in $ENVIRONMENTS; do
+            echo "📁 Creating environment: $ENV"
+
+            # Create the environment (idempotent)
+            gh api \
+              --method PUT \
+              -H "Accept: application/vnd.github+json" \
+              /repos/${{ github.repository }}/environments/$ENV \
+              -f wait_timer=0
+
+            echo "🔐 Adding secrets to environment: $ENV"
+
+            # Add secrets - replace/add your own keys and values
+            gh secret set AWS_REGION \
+              --env $ENV \
+              --body "us-east-1"
+
+            gh secret set ENV_SECRET_KEY \
+              --env $ENV \
+              --body "${ENV}_secret_value"
+          done

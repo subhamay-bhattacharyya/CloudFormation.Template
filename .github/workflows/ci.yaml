@@ -24,8 +24,8 @@ permissions:
   issues: write                         # This is required for gh bot to comment issues
 
 jobs:
-  sam-build:
-    name: Build and Package
+  build-test:
+    name: Build and Test
     runs-on: ubuntu-latest
 
     permissions:
@@ -51,10 +51,13 @@ jobs:
           aws-region: "us-east-1"
           role-session-name: github-aws-cloudformation-oidc
 
+      - name: List the contents of the repository
+        run: ls -al
+
       - name: Run Checkov Scan
         uses: bridgecrewio/checkov-action@master
         with:
-          directory: ${{ github.workspace }}
+          directory: ${{ github.workspace }}/cfn/root-stack-template.yaml
           soft_fail: true # optional: do not return an error code if there are failed checks
           # check: CKV_AWS_1 # optional: run only a specific check_id. can be comma separated list
           # skip_check: CKV_AWS_2 # optional: skip a specific check_id. can be comma separated list
@@ -77,3 +80,9 @@ jobs:
       #   run: |
       #     echo "### Checkov Scan Report Summary" >> $GITHUB_STEP_SUMMARY
       #     cat ${{ github.workspace }}/results.sarif.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Validate CloudFormation template
+        run: aws cloudformation validate-template --template-body file://${{ github.workspace }}/cfn/root-stack-template.yaml
+        env:
+          AWS_DEFAULT_REGION: us-east-1
+          AWS_REGION: us-east-1
