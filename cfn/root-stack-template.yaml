@@ -449,5 +449,5 @@ Resources:
 Outputs:
   ###################################### S3 Bucket #################################################
   S3BucketArn:
-    Description: S3 Bucket Arn
+    Description: Arn of the S3 bucket.
     Value: !GetAtt S3Bucket.Outputs.S3BucketArn

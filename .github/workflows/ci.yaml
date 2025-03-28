@@ -51,6 +51,9 @@ jobs:
           aws-region: "us-east-1"
           role-session-name: github-aws-cloudformation-oidc
 
+      - name: List the contents of the repository
+        run: ls -al
+
       - name: Run Checkov Scan
         uses: bridgecrewio/checkov-action@master
         with:
