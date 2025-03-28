@@ -75,86 +75,91 @@ Metadata:
           - TransitionToDeepArchiveDays
           - EnableExpiration
           - ExpirationDays
-    ParameterLabels:
-      ################################## Project Name and Environment ##############################
-      ProjectName:
-        default: "Name of the Project."
-      Environment:
-        default: "Name of the Deployment Environment."
-      ################################## GitHub Attributes #########################################
-      GitHubRef:
-        default: "GitHub Reference Branch or Tag."
-      GitHubURL:
-        default: "URL of the GitHub Repository."
-      GitHubWFRunNumber:
-        default: "GitHub Workflow Execution Run Number."
-      GitHubSHA:
-        default: "GitHub Commit SHA."
-      GitHubRepository:
-        default: "Name of the GitHub Repository."
-      CiBuild:
-        default: "Continuous Integration Build Identifier."
-      ################################## Code Repository Bucket ####################################
-      CodeRepositoryS3Bucket:
-        default: S3 Bucket where the nested stack templates are available.
-      ################################## KMS #######################################################
-      # KmsMasterKeyAlias:
-      #   default: "KMS Master Key Alias."
-      KmsMasterKeyArn:
-        default: "KMS Master Key Arn."
-      ###################################### VPC Stack #############################################
-      VpcStackName:
-        default: "Name of the VPC Stack."
-      ################################## S3 Bucket #################################################
-      S3BucketBaseName:
-        default: "Base name for the S3 bucket."
-      S3BucketBlockPublicAcls:
-        default: "Block public ACLs setting."
-      S3BucketBlockPublicPolicy:
-        default: "Allow Block Public Policy."
-      S3BucketIgnorePublicAcls:
-        default: "Ignore public ACLs setting."
-      S3BucketRestrictPublicBuckets:
-        default: "Restrict public buckets setting."
-      BucketVersioningEnabled:
-        default: "Enable versioning for the bucket."
-      ################################## Lifecycle Configuration ###################################
-      S3LifecycleConfigurationEnabled:
-        default: "Enable lifecycle configuration for the bucket."
-      TransitionPrefix:
-        default: "Prefix for lifecycle transition rules."
-      StandardIATransitionEnabled:
-        default:  "Enable transition to Standard-IA storage class."
-      TransitionToIADays:
-        default: "Number of days before transitioning to Standard-IA."
-      IntelligentTieringEnabled:
-        default: "Enable transition to Intelligent-Tiering storage class."
-      TransitionToITDays:
-        default: "Number of days before transitioning to Intelligent-Tiering."
-      OneZoneIATransitionEnabled:
-        default: "Enable transition to One Zone-IA storage class."
-      TransitionToOZIADays:
-        default: "Number of days before transitioning to One Zone-IA."
-      GlacierIRTransitionEnabled:
-        default: "Enable transition to Glacier Instant Retrieval storage class."
-      TransitionToGlacierIRDays:
-        default: "Number of days before transitioning to Glacier Instant Retrieval."
-      GlacierTransitionEnabled:
-        default: "Number of days before transitioning to Glacier."
-      TransitionToGlacierDays:
-        default: "Number of days before transitioning to Glacier."
-      DeepArchiveTransitionEnabled:
-        default: "Enable transition to Deep Archive storage class."
-      TransitionToDeepArchiveDays:
-        default: "Number of days before transitioning to Deep Archive."
-      EnableExpiration:
-        default: "Enable object expiration."
-      ExpirationDays:
-        default: "Number of days before object expiration."
+  ParameterLabels:
+    ################################## Project Name and Environment ##############################
+    ProjectName:
+      default: "Name of the Project."
+    Environment:
+      default: "Name of the Deployment Environment."
+
+    ################################## GitHub Attributes #########################################
+    GitHubRef:
+      default: "GitHub Reference Branch or Tag."
+    GitHubURL:
+      default: "URL of the GitHub Repository."
+    GitHubWFRunNumber:
+      default: "GitHub Workflow Execution Run Number."
+    GitHubSHA:
+      default: "GitHub Commit SHA."
+    GitHubRepository:
+      default: "Name of the GitHub Repository."
+    CiBuild:
+      default: "CI Build Identifier."
+
+    ################################## Code Repository ###########################################
+    CodeRepositoryS3Bucket:
+      default: "S3 Bucket for Nested Templates."
+
+    ################################## KMS #######################################################
+    KmsMasterKeyArn:
+      default: "KMS Master Key ARN."
+
+    ################################## VPC Stack #################################################
+    VpcStackName:
+      default: "Name of the VPC Stack."
+
+    ################################## S3 Bucket #################################################
+    S3BucketBaseName:
+      default: "S3 Bucket Base Name."
+    S3BucketBlockPublicAcls:
+      default: "Block Public ACLs."
+    S3BucketBlockPublicPolicy:
+      default: "Block Public Policy."
+    S3BucketIgnorePublicAcls:
+      default: "Ignore Public ACLs."
+    S3BucketRestrictPublicBuckets:
+      default: "Restrict Public Buckets."
+    BucketVersioningEnabled:
+      default: "Enable Bucket Versioning."
+
+    ################################## Lifecycle Configuration ###################################
+    S3LifecycleConfigurationEnabled:
+      default: "Enable Lifecycle Configuration."
+    TransitionPrefix:
+      default: "Lifecycle Transition Prefix."
+    StandardIATransitionEnabled:
+      default: "Enable Standard-IA Transition."
+    TransitionToIADays:
+      default: "Days Before Standard-IA Transition."
+    IntelligentTieringEnabled:
+      default: "Enable Intelligent Tiering Transition."
+    TransitionToITDays:
+      default: "Days Before Intelligent Tiering Transition."
+    OneZoneIATransitionEnabled:
+      default: "Enable One Zone-IA Transition."
+    TransitionToOZIADays:
+      default: "Days Before One Zone-IA Transition."
+    GlacierIRTransitionEnabled:
+      default: "Enable Glacier Instant Retrieval Transition."
+    TransitionToGlacierIRDays:
+      default: "Days Before Glacier Instant Retrieval Transition."
+    GlacierTransitionEnabled:
+      default: "Enable Glacier Transition."
+    TransitionToGlacierDays:
+      default: "Days Before Glacier Transition."
+    DeepArchiveTransitionEnabled:
+      default: "Enable Deep Archive Transition."
+    TransitionToDeepArchiveDays:
+      default: "Days Before Deep Archive Transition."
+    EnableExpiration:
+      default: "Enable Object Expiration."
+    ExpirationDays:
+      default: "Days Before Object Expiration."
+
 Parameters:
   ###################################### Project Name and Environment ##############################
   ProjectName:
-    Default: serverless-lab-01
+    Default: gh-cfn-templ
     Description: The Project name to be used as a resource tag value.
     Type: String
     MinLength: "5"
@@ -182,7 +187,7 @@ Parameters:
       characters, slashes, underscores, and hyphens.
 
   GitHubURL:
-    Default: https://github.com/subhamay-bhattacharyya/0301-serverless-py-cft
+    Default: https://github.com/subhamay-bhattacharyya/CloudFormation.Template
     Description: GitHub URL to be used as a resource tag value.
     Type: String
     AllowedPattern: ^https://github.com/[a-zA-Z0-9._-]+/[a-zA-Z0-9._-]+/?$
@@ -202,7 +207,7 @@ Parameters:
     ConstraintDescription: The SHA value must be a 40-character hexadecimal string.
 
   GitHubRepository:
-    Default: 0301-serverless-py-cft
+    Default: 0123-cloudformation-template
     Description: The GitHub Repository name to be used as a resource tag value.
     Type: String
     MinLength: "10"
@@ -253,13 +258,13 @@ Parameters:
 
   ###################################### S3 Bucket #################################################
   S3BucketBaseName:
-    Default: weather-dashboard
+    Default: cfn-templates
     Description: "The base name for the S3 bucket used for source data. The region will be added as a suffix by the template."
     Type: String
     MinLength: "3"
     MaxLength: "20"
     AllowedPattern: "^[a-z0-9.-]{3,20}$"
-    ConstraintDescription: "The S3 bucket name must be 3?63 characters long and can only include lowercase letters, numbers, dots, and hyphens."
+    ConstraintDescription: "The S3 bucket name must be 3-63 characters long and can only include lowercase letters, numbers, dots, and hyphens."
 
   S3BucketBlockPublicAcls:
     Default: "true"
@@ -412,10 +417,10 @@ Resources:
         BucketVersioningEnabled: !Ref BucketVersioningEnabled
         KmsMasterKeyArn: !Ref KmsMasterKeyArn
         S3VpcEndpointId: !ImportValue
-          Fn::Sub: "${VpcStackName}-PrivateSubnetIds"
+          Fn::Sub: "${VpcStackName}-S3GatewayVpceId"
         # IAMRoleBaseName: "lambda-role"
-        # WhitelistedUserId: AIDAZI2LGYSY7WDKOVKYW
-        # WhitelistedRoleId: AROAZI2LGYSYVKL4XJGIN
+        WhitelistedUserId: AIDAZI2LGYSY7WDKOVKYW
+        WhitelistedRoleId: AROAZI2LGYSYVKL4XJGIN
         S3LifecycleConfigurationEnabled: !Ref S3LifecycleConfigurationEnabled
         TransitionPrefix: !Ref TransitionPrefix
         StandardIATransitionEnabled: !Ref StandardIATransitionEnabled
